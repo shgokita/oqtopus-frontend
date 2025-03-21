@@ -6,7 +6,7 @@ The web-based frontend application for OQTOPUS.
 
 ### Requirements for Development
 
-- Node.js (v18 or later)
+- [bun](https://bun.sh/)
 - Working deployments of [OQTOPUS cloud](https://github.com/oqtopus-team/oqtopus-cloud.git)
 
 ## Production Deployment
@@ -42,7 +42,16 @@ The application is built using Vite, so general knowledge about Vite environment
 For instance, you can use a .local environment file to override values listed in the .env file or to include sensitive values that should not be committed to version-controlled files.
 For a more detailed explanation of how Vite handles and injects environment variables into the bundled application, please refer to [the official Vite documentation](https://ja.vite.dev/guide/env-and-mode.html).
 
-### Development Guide
+## Development Guide
+
+### Local development
+
+You can start the local development server with the following steps:
+
+```sh
+bun install
+bun run dev
+```
 
 ### How to Update the `src/api`
 
