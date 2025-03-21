@@ -1,0 +1,66 @@
+export default {
+  list: {
+    title: 'Device list',
+    description:
+      'These are electronic components that utilize the knowledge of quantum mechanics, which deals with molecules and atoms. You can check topology information and values ​​for each qubit.',
+    table: {
+      id: 'Device ID',
+      name: 'Device name',
+      status: 'Status',
+      qubits: 'Qubits',
+      type: 'Type',
+      pending_jobs: 'Pending jobs',
+      basis_gates: 'Basis Gates',
+      instructions: 'Instructions',
+      description: 'Description',
+      available_at: 'Available at',
+      calib_date: 'Last calibrated',
+    },
+  },
+  detail: {
+    title: 'Device',
+    id: 'ID',
+    status: 'Status',
+    qubits: 'Number of qubits',
+    type: 'Type',
+    date: 'Last updated',
+    available_at: 'Available at',
+    calibrated_at: 'Calibrated at',
+    basis_gates: 'Basis Gates',
+    instructions: 'Instructions',
+    description: 'Description',
+    table: {
+      '1q_fidelity': 'Average 1Q Fidelity',
+      '2q_fidelity': 'Average 2Q Fidelity',
+      average_fidelity: 'Average read fidelity',
+      time: 'Read time',
+    },
+    link_txt: 'Information about each word',
+    topology_info: {
+      header: 'Topology information',
+      property: 'Property',
+      median: 'Median',
+      max: 'Maximum',
+      min: 'Minimum',
+      nodata: 'Data does not exist.',
+      invalid_device_info: 'Topology information is invalid',
+    },
+    qubits_info: {
+      header: 'Value per qubit',
+      search: 'Search',
+      table: {
+        frequency: 'Frequency',
+        anharmonicity: 'Anharmonicity',
+        error: 'read allocation error',
+      },
+    },
+  },
+  status: {
+    available: 'Available',
+    unavailable: 'Unavailable',
+  },
+  type: {
+    simulator: 'Simulator',
+    superconductivity: 'Superconductivity',
+  },
+};

@@ -1,0 +1,7 @@
+type News @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  category: String
+  date: AWSDate
+  title: String
+  detail: String
+}
