@@ -1,5 +1,7 @@
 # OQTOPUS Frontend
 
+![OQTOPUS](./public/img/common/logo/oqtopus.png "oqtopus")
+
 The web-based frontend application for OQTOPUS.
 
 ## Overview
