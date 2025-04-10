@@ -11,6 +11,7 @@ import { SuccessViewEstimation } from './_components/EstimationJobDetail';
 import { SuccessViewMultiManual } from './_components/MultiManualJobDetail';
 import { SuccessViewSSELog } from './_components/SSEJobDetail';
 import { useJobAPI } from '@/backend/hook';
+import DownloadJobButton from '../_components/DownloadJobButton';
 
 export default function JobDetailPage_() {
   const { id } = useParams();
@@ -47,7 +48,10 @@ const JobDetailPage = ({ params: { id } }: { params: Params }) => {
   }
   return (
     <>
-      <Title />
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <Title />
+        <DownloadJobButton style={{ marginLeft: 'auto', marginRight: '0.5rem' }} job={job} />
+      </div>
       <Spacer className="h-3" />
       <SuccessViewWrapper {...job} />
     </>
