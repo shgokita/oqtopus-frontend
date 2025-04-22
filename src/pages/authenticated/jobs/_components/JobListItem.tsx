@@ -8,6 +8,7 @@ import { Button } from '@/pages/_components/Button';
 import { NavLink } from 'react-router';
 import { useJobAPI } from '@/backend/hook';
 import { BsDownload } from 'react-icons/bs';
+import { DateTimeFormatter } from '../../_components/DateTimeFormatter';
 
 interface JobProps {
   job: Job;
@@ -84,7 +85,7 @@ export const JobListItem = ({
       <td>
         <JobStatus status={job.status} />
       </td>
-      <td>{job.submittedAt}</td>
+      <td>{DateTimeFormatter(t, i18n, job.submittedAt)}</td>
       <td className={clsx('text-wrap', 'break-words', 'whitespace-normal', 'max-w-min')}>
         {job.description}
       </td>
