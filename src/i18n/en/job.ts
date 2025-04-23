@@ -40,6 +40,7 @@ export default {
     description:
       '*Running at, Ended at, Execution time, Transpiled Program, Result and some other fields will be reflected during job processing.',
     not_found: 'Job not found',
+    reload: 'reload',
     info: {
       head: 'Basic information',
       item: 'Item',
