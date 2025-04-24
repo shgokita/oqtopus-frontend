@@ -9,6 +9,8 @@ import { Select } from '@/pages/_components/Select';
 import { TextArea } from '@/pages/_components/TextArea';
 import { Spacer } from '@/pages/_components/Spacer';
 import { NavLink, useNavigate } from 'react-router';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useDeviceAPI, useJobAPI } from '@/backend/hook';
 import { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { Device } from '@/domain/types/Device';
@@ -41,6 +43,7 @@ export default function Page() {
   const { submitJob } = useJobAPI();
 
   const [devices, setDevices] = useState<Device[]>([]);
+
   useLayoutEffect(() => {
     getDevices().then((devices) => setDevices(devices));
   }, []);
@@ -178,7 +181,12 @@ export default function Page() {
   });
 
   const [processing, setProcessing] = useState(false);
-  const handleSubmit = async () => {
+
+  const handleSubmit = async (shouldNavigate: boolean = false) => {
+    if (processing) {
+      console.warn('Already processing');
+      return;
+    }
     if (shots <= 0) {
       setError((error) => ({ ...error, shots: t('job.form.error_message.shots') }));
       return;
@@ -284,31 +292,33 @@ export default function Page() {
     }
 
     setProcessing(true);
-    const res = await submitJob({
-      name: name.trim(),
-      description,
-      device_id: deviceId,
-      job_type: jobType,
-      job_info: sanitizedJobInfo,
-      transpiler_info: JSON.parse(transpilerInfo),
-      simulator_info: JSON.parse(simulatorInfo),
-      mitigation_info: JSON.parse(mitigationInfo),
-      shots,
-    })
-      .catch((e) => {
-        console.error(e);
-      })
-      .finally(() => {
-        setProcessing(false);
-      });
-    return res;
-  };
 
-  const handleSubmitAndViewJob = async () => {
-    const jobId = await handleSubmit();
-    if (processing) return;
-    if (!jobId) return;
-    navigate('/jobs/' + jobId);
+    try {
+      const res = await submitJob({
+        name: name.trim(),
+        description,
+        device_id: deviceId,
+        job_type: jobType,
+        job_info: sanitizedJobInfo,
+        transpiler_info: JSON.parse(transpilerInfo),
+        simulator_info: JSON.parse(simulatorInfo),
+        mitigation_info: JSON.parse(mitigationInfo),
+        shots,
+      });
+      toast.success(
+        t('job.form.toast.success'),
+        shouldNavigate
+          ? {
+              onClose: () => navigate('/jobs/' + res),
+            }
+          : {}
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error(t('job.form.toast.error'));
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleProgramTypeChange = (newProgramType: ProgramType) => {
@@ -341,6 +351,16 @@ export default function Page() {
 
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000} // display for 2 seconds
+        newestOnTop={true}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        hideProgressBar={true}
+        pauseOnHover
+      />
       <h2 className={clsx('text-primary', 'text-2xl', 'font-bold')}>{t('job.form.title')}</h2>
       <Spacer className="h-3" />
       <p className={clsx('text-sm')}>{t('job.form.description')}</p>
@@ -558,10 +578,10 @@ export default function Page() {
         <div className={clsx('flex', 'flex-wrap', 'gap-2', 'justify-between', 'items-end')}>
           <div className={clsx('flex', 'flex-wrap', 'gap-2', 'justify-between')}>
             <JobFileUpload setJobFileData={setJobFileData} devices={devices} />
-            <Button color="secondary" onClick={handleSubmit} loading={processing}>
+            <Button color="secondary" onClick={() => handleSubmit(false)} loading={processing}>
               {t('job.form.button')}
             </Button>
-            <Button color="secondary" onClick={handleSubmitAndViewJob} loading={processing}>
+            <Button color="secondary" onClick={() => handleSubmit(true)} loading={processing}>
               {t('job.form.submit_and_view_job_button')}
             </Button>
           </div>
