@@ -86,6 +86,10 @@ export default {
       head: 'SSE ログ',
       button: 'Log ダウンロード',
     },
+    text: {
+      copied: 'コピーしました',
+      copy_tooltip: 'クリップボードにコピー',
+    },
   },
   form: {
     title: 'Job入力フォーム',

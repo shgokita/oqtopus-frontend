@@ -86,6 +86,10 @@ export default {
       head: 'SSE log',
       button: 'Download Log',
     },
+    text: {
+      copied: 'Copied',
+      copy_tooltip: 'Copy to clipboard',
+    },
   },
   form: {
     title: 'Job input form',

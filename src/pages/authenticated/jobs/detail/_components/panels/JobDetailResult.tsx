@@ -5,6 +5,7 @@ import { Spacer } from '@/pages/_components/Spacer';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import { JobsEstimationResult, JobsSamplingResult } from '@/api/generated';
+import ClipboardCopy from './utils/ClipboardCopy';
 
 export interface JobDetailResultProps {
   result?: JobsSamplingResult | JobsEstimationResult;
@@ -24,6 +25,7 @@ export const JobDetailResult: React.FC<JobDetailResultProps> = (job: JobDetailRe
     })();
     return retVal;
   })();
+  const text = JSON.stringify(json);
 
   return (
     <>
@@ -34,9 +36,14 @@ export const JobDetailResult: React.FC<JobDetailResultProps> = (job: JobDetailRe
       {job.result === undefined || job.result === null ? (
         <div className={clsx('text-xs')}>{t('job.detail.result.nodata')}</div>
       ) : (
-        <SimpleBar style={{ maxHeight: job.maxHeight }}>
-          <JSONCodeBlock json={JSON.stringify(json)} />
-        </SimpleBar>
+        <div className={clsx('relative')}>
+          <div className={clsx('rounded', 'bg-cmd-bg', 'text-sm')}>
+            <SimpleBar style={{ maxHeight: job.maxHeight }}>
+              <JSONCodeBlock json={text} />
+            </SimpleBar>
+          </div>
+          <ClipboardCopy text={text} />
+        </div>
       )}
     </>
   );

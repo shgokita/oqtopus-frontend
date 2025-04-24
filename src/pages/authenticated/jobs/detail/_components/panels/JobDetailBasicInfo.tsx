@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Spacer } from '@/pages/_components/Spacer';
 import { isFinishedStatus } from './utils/StatusHelpers';
 import { DateTimeFormatter } from '../../../../_components/DateTimeFormatter';
+import ClipboardCopy from './utils/ClipboardCopy';
 
 export interface JobDetailBasicInfoProps {
   id: string;
@@ -51,7 +52,12 @@ export const JobDetailBasicInfo: React.FC<JobDetailBasicInfoProps> = (
         </thead>
         <tbody>
           <tr>
-            <BoldTh>{t('job.detail.info.id')}</BoldTh>
+            <BoldTh>
+              <div className={clsx('relative')}>
+                {t('job.detail.info.id')}
+                <ClipboardCopy text={job.id} />
+              </div>
+            </BoldTh>
             <td>{job.id}</td>
           </tr>
           <tr>
