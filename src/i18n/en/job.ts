@@ -123,5 +123,8 @@ export default {
       },
       invalid_json: 'Please enter correct JSON',
     },
+    modal: {
+      overwrite_program: 'Are you sure you want to overwrite this program?',
+    },
   },
 };
