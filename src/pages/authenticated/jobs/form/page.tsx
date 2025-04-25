@@ -8,9 +8,11 @@ import { Input } from '@/pages/_components/Input';
 import { Select } from '@/pages/_components/Select';
 import { TextArea } from '@/pages/_components/TextArea';
 import { Spacer } from '@/pages/_components/Spacer';
-import { NavLink } from 'react-router';
+import { NavLink, useNavigate } from 'react-router';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useDeviceAPI, useJobAPI } from '@/backend/hook';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { FormEvent, useEffect, useLayoutEffect, useState } from 'react';
 import { Device } from '@/domain/types/Device';
 import {
   JOB_FORM_MITIGATION_INFO_DEFAULTS,
@@ -24,17 +26,24 @@ import {
   TRANSPILER_TYPE_DEFAULT,
   TRANSPILER_TYPES,
   TranspilerTypeType,
+  PROGRAM_TYPES,
+  ProgramType,
+  PROGRAM_TYPE_DEFAULT,
+  initializeJobFormProgramDefaults,
 } from '@/domain/types/Job';
 import { JobsSubmitJobInfo } from '@/api/generated';
 import { Toggle } from '@/pages/_components/Toggle';
 import JobFileUpload from './_components/JobFileUpload';
+import { ConfirmModal } from '@/pages/_components/ConfirmModal';
 
 export default function Page() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { getDevices } = useDeviceAPI();
   const { submitJob } = useJobAPI();
 
   const [devices, setDevices] = useState<Device[]>([]);
+
   useLayoutEffect(() => {
     getDevices().then((devices) => setDevices(devices));
   }, []);
@@ -46,7 +55,27 @@ export default function Page() {
 
   const [jobInfo, setJobInfo] = useState<JobsSubmitJobInfo>({ program: [''], operator: [] });
   const [program, setProgram] = useState<string[]>(['']);
-  const [operator, setOperator] = useState<OperatorItem[]>([{ pauli: '', coeff: ['0', '0'] }]);
+  const [programType, setProgramType] = useState<ProgramType>(PROGRAM_TYPE_DEFAULT);
+  const [pendingProgramType, setPendingProgramType] = useState<ProgramType | null>(null);
+  const [deleteModalShow, setDeleteModalShow] = useState(false);
+  const [operator, setOperator] = useState([{ pauli: '', coeff: 1.0 }]);
+  const [jobDefaults, setJobDefaults] = useState<{ [key in ProgramType]: string } | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    // Load the default program from /public/sample_program
+    async function fetchDefaults() {
+      try {
+        const defaults = await initializeJobFormProgramDefaults();
+        setJobDefaults(defaults);
+      } catch (error) {
+        console.error('failed to initialize:', error);
+      }
+    }
+    fetchDefaults();
+  }, []);
+
   useEffect(() => {
     setJobInfo((jobInfo) => ({ ...jobInfo, program }));
     setError((error) => ({ ...error, jobInfo: { ...error.jobInfo, program: {} } }));
@@ -56,7 +85,7 @@ export default function Page() {
       ...jobInfo,
       operator: operator.map((op) => ({
         ...op,
-        coeff: op.coeff.map((c) => (c === '' ? NaN : Number(c))),
+        coeff: Number(op.coeff),
       })),
     }));
     setError((error) => ({
@@ -113,7 +142,7 @@ export default function Page() {
     setJobType(jobFileData.jobType);
     setJobInfo(jobFileData.jobInfo);
     setProgram(jobFileData.jobInfo.program);
-    setOperator(jobFileData.jobInfo.operator ?? [{ pauli: '', coeff: ['0', '0'] }]);
+    setOperator(jobFileData.jobInfo.operator ?? [{ pauli: '', coeff: 1.0 }]);
     setTranspilerInfo(JSON.stringify(jobFileData.transpilerInfo ?? ''));
     setSimulatorInfo(JSON.stringify(jobFileData.simulatorInfo ?? ''));
 
@@ -140,7 +169,7 @@ export default function Page() {
       program: { [index: number]: string };
       operator: {
         pauli: { [index: number]: string };
-        coeff: { [index: number]: [string | undefined, string | undefined] };
+        coeff: { [index: number]: string };
       };
     };
     transpilerInfo?: string;
@@ -152,12 +181,12 @@ export default function Page() {
   });
 
   const [processing, setProcessing] = useState(false);
-  const handleSubmit = async () => {
-    if (name.trim() === '') {
-      setError((error) => ({ ...error, name: t('job.form.error_message.name') }));
+
+  const handleSubmit = async (shouldNavigate: boolean = false) => {
+    if (processing) {
+      console.warn('Already processing');
       return;
     }
-
     if (shots <= 0) {
       setError((error) => ({ ...error, shots: t('job.form.error_message.shots') }));
       return;
@@ -212,29 +241,25 @@ export default function Page() {
             }));
             return false;
           }
-          if (operatorItem.coeff) {
-            const errors = [undefined, undefined] as [string | undefined, string | undefined];
-            operatorItem.coeff.forEach((c: number, j: number) => {
-              if (isNaN(c)) {
-                errors[j] = t('job.form.error_message.operator.coeff');
-              }
-            });
-            if (errors.some((e) => e !== undefined)) {
-              setError((error) => ({
-                ...error,
-                jobInfo: {
-                  ...error.jobInfo,
-                  operator: {
-                    ...error.jobInfo.operator,
-                    coeff: {
-                      ...error.jobInfo.operator.coeff,
-                      [i]: errors,
-                    },
+          const coeffError =
+            `{${operatorItem.coeff}`.trim() == '' || isNaN(Number(operatorItem.coeff))
+              ? t('job.form.error_message.operator.coeff')
+              : undefined;
+
+          if (coeffError) {
+            setError((errors) => ({
+              jobInfo: {
+                ...errors.jobInfo,
+                operator: {
+                  ...errors.jobInfo.operator,
+                  coeff: {
+                    ...errors.jobInfo.operator.coeff,
+                    [i]: coeffError,
                   },
                 },
-              }));
-              return false;
-            }
+              },
+            }));
+            return false;
           }
           return true;
         })
@@ -267,27 +292,75 @@ export default function Page() {
     }
 
     setProcessing(true);
-    await submitJob({
-      name: name.trim(),
-      description,
-      device_id: deviceId,
-      job_type: jobType,
-      job_info: sanitizedJobInfo,
-      transpiler_info: JSON.parse(transpilerInfo),
-      simulator_info: JSON.parse(simulatorInfo),
-      mitigation_info: JSON.parse(mitigationInfo),
-      shots,
-    })
-      .catch((e) => {
-        console.error(e);
-      })
-      .finally(() => {
-        setProcessing(false);
+
+    try {
+      const res = await submitJob({
+        name: name.trim(),
+        description,
+        device_id: deviceId,
+        job_type: jobType,
+        job_info: sanitizedJobInfo,
+        transpiler_info: JSON.parse(transpilerInfo),
+        simulator_info: JSON.parse(simulatorInfo),
+        mitigation_info: JSON.parse(mitigationInfo),
+        shots,
       });
+      toast.success(
+        t('job.form.toast.success'),
+        shouldNavigate
+          ? {
+              onClose: () => navigate('/jobs/' + res),
+            }
+          : {}
+      );
+    } catch (e) {
+      console.error(e);
+      toast.error(t('job.form.toast.error'));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleProgramTypeChange = (newProgramType: ProgramType) => {
+    if (program[0] !== '') {
+      setPendingProgramType(newProgramType);
+      setDeleteModalShow(true);
+    } else {
+      setProgramType(newProgramType);
+      if (jobDefaults) {
+        setProgram([jobDefaults[newProgramType]]);
+      }
+    }
+  };
+
+  const confirmProgramTypeChange = () => {
+    if (pendingProgramType) {
+      setProgramType(pendingProgramType);
+      setPendingProgramType(null);
+      if (jobDefaults) {
+        setProgram([jobDefaults[pendingProgramType]]);
+      }
+    }
+    setDeleteModalShow(false);
+  };
+
+  const cancelProgramTypeChange = () => {
+    setPendingProgramType(null);
+    setDeleteModalShow(false);
   };
 
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000} // display for 2 seconds
+        newestOnTop={true}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        hideProgressBar={true}
+        pauseOnHover
+      />
       <h2 className={clsx('text-primary', 'text-2xl', 'font-bold')}>{t('job.form.title')}</h2>
       <Spacer className="h-3" />
       <p className={clsx('text-sm')}>{t('job.form.description')}</p>
@@ -370,7 +443,24 @@ export default function Page() {
               <Spacer className="h-4" />
               <Divider />
               <Spacer className="h-4" />
-              <p className={clsx('font-bold', 'text-primary')}>program</p>
+              <div className={clsx('flex', 'justify-between')}>
+                <p className={clsx('font-bold', 'text-primary')}>program</p>
+                <Select
+                  labelLeft="sample program"
+                  value={programType}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    handleProgramTypeChange(e.target.value as ProgramType);
+                  }}
+                  errorMessage={error.jobType}
+                  size="xs"
+                >
+                  {PROGRAM_TYPES.map((oneProgramType) => (
+                    <option key={oneProgramType} value={oneProgramType}>
+                      {oneProgramType}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <Spacer className="h-2" />
             </>
             {/* programs */}
@@ -384,10 +474,21 @@ export default function Page() {
               }}
               errorMessage={error.jobInfo.program[0]}
             />
+            <ConfirmModal
+              show={deleteModalShow}
+              onHide={cancelProgramTypeChange}
+              title={t('job.list.modal.title')}
+              message={t('job.form.modal.overwrite_program')}
+              onConfirm={confirmProgramTypeChange}
+            />
             <Spacer className="h-5" />
             {/* operator */}
             {jobType === 'estimation' && (
-              <OperatorForm current={operator} set={setOperator} error={error.jobInfo.operator} />
+              <OperatorForm
+                current={operator}
+                set={(v) => setOperator(v)}
+                error={error.jobInfo.operator}
+              />
             )}
             <Spacer className="h-7" />
           </div>
@@ -477,8 +578,11 @@ export default function Page() {
         <div className={clsx('flex', 'flex-wrap', 'gap-2', 'justify-between', 'items-end')}>
           <div className={clsx('flex', 'flex-wrap', 'gap-2', 'justify-between')}>
             <JobFileUpload setJobFileData={setJobFileData} devices={devices} />
-            <Button color="secondary" onClick={handleSubmit} loading={processing}>
+            <Button color="secondary" onClick={() => handleSubmit(false)} loading={processing}>
               {t('job.form.button')}
+            </Button>
+            <Button color="secondary" onClick={() => handleSubmit(true)} loading={processing}>
+              {t('job.form.submit_and_view_job_button')}
             </Button>
           </div>
           <CheckReferenceCTA />
@@ -494,7 +598,7 @@ const CheckReferenceCTA = () => {
       {i18next.language === 'ja' ? (
         <>
           各入力値については
-          <NavLink to="#" className="text-link">
+          <NavLink to="/howto#/job/submit_job" className="text-link">
             こちら
           </NavLink>
           の説明を参照してください
@@ -502,7 +606,7 @@ const CheckReferenceCTA = () => {
       ) : (
         <>
           For each input value, please refer to the explanation{' '}
-          <NavLink to="#" className="text-link">
+          <NavLink to="/howto#/job/submit_job" className="text-link">
             here.
           </NavLink>
         </>
@@ -520,10 +624,23 @@ const OperatorForm = ({
   set: (_: OperatorItem[]) => void;
   error: {
     pauli: { [index: number]: string };
-    coeff: { [index: number]: [string | undefined, string | undefined] };
+    coeff: { [index: number]: string };
   };
 }) => {
   const { t } = useTranslation();
+  const [formValue, setFormValue] = useState([{ pauli: '', coeff: '1.0' }]);
+  const handleCoeffInput = (index: number) => (e: FormEvent<HTMLInputElement>) => {
+    const coeffRaw = (e.target as HTMLInputElement).value;
+    const coeffNumber = coeffRaw.trim() === '' ? Number.NaN : Number(coeffRaw);
+
+    set(current.map((o, i) => (i === index ? { ...o, coeff: coeffNumber } : o)));
+    setFormValue({ ...formValue, [index]: { ...formValue[index], coeff: coeffRaw } });
+  };
+
+  const handlePlusButtonClick = () => {
+    set([...current, { pauli: '', coeff: 1.0 }]);
+    setFormValue([...formValue, { pauli: '', coeff: '1.0' }]);
+  };
 
   return (
     <div className={clsx('grid', 'gap-2')}>
@@ -532,30 +649,36 @@ const OperatorForm = ({
       <p className={clsx('font-bold', 'text-primary')}>operator</p>
       <div className={clsx('grid', 'gap-4')}>
         {current.map((item, index) => (
-          <div key={index} className={clsx('flex', 'gap-1', 'items-center')}>
+          <div key={index} className={clsx('flex', 'gap-1', 'items-end')}>
             <div className={clsx('grid', 'gap-1', 'w-full')}>
-              <Input
-                label="pauli"
-                placeholder={t('job.form.info_pauli_placeholder')}
-                value={item.pauli}
-                onChange={(e) => {
-                  set(current.map((o, i) => (i === index ? { ...o, pauli: e.target.value } : o)));
-                }}
-                errorMessage={error.pauli[index]}
-              />
-              <ComplexForm
-                label="coeff"
-                curr={item.coeff}
-                set={(coeff) => {
-                  set(current.map((o, i) => (i === index ? { ...o, coeff } : o)));
-                }}
-                error={error.coeff[index] ?? [undefined, undefined]}
-              />
+              <div className={clsx('flex', 'gap-3')}>
+                <Input
+                  label={t('job.form.operator.coeff')}
+                  placeholder={t('job.form.operator_coeff_placeholder')}
+                  value={formValue[index].coeff}
+                  type="string"
+                  onInput={handleCoeffInput(index)}
+                  errorMessage={error.coeff[index]}
+                />
+                <Input
+                  label={t('job.form.operator.pauli')}
+                  placeholder={t('job.form.operator_pauli_placeholder')}
+                  value={item.pauli}
+                  onChange={(e) => {
+                    set(
+                      current.map((o, i) =>
+                        i === index ? { ...o, pauli: (e.target as HTMLInputElement)?.value } : o
+                      )
+                    );
+                  }}
+                  errorMessage={error.pauli[index]}
+                />
+              </div>
             </div>
             <Button
               color="error"
               size="small"
-              className={clsx('w-8', 'h-16', 'flex', 'justify-center', 'items-center')}
+              className={clsx('w-8', 'h-8', 'flex', 'justify-center', 'items-center')}
               onClick={() => {
                 set(current.filter((_, i) => i !== index));
               }}
@@ -566,52 +689,9 @@ const OperatorForm = ({
         ))}
       </div>
       <div className={clsx('w-min')}>
-        <Button
-          color="secondary"
-          size="small"
-          onClick={() => set([...current, { pauli: '', coeff: ['', '0'] }])}
-        >
+        <Button color="secondary" size="small" onClick={handlePlusButtonClick}>
           +
         </Button>
-      </div>
-    </div>
-  );
-};
-
-const ComplexForm = ({
-  label,
-  curr,
-  set,
-  error,
-}: {
-  label?: string;
-  curr: [string, string];
-  set: (_: [string, string]) => void;
-  error: [string | undefined, string | undefined];
-}) => {
-  return (
-    <div className={clsx('grid', 'gap-1')}>
-      {label && <p className="text-xs">{label}</p>}
-      <div className={clsx('flex', 'gap-1', 'items-start')}>
-        <Input
-          value={curr[0]}
-          type="number"
-          onChange={(e) => {
-            set([e.target.value, curr[1]]);
-          }}
-          errorMessage={error[0]}
-        />
-        <p className={clsx('whitespace-nowrap', 'h-8', 'flex', 'items-center')}>
-          <span>+ i</span>
-        </p>
-        <Input
-          value={curr[1]}
-          type="number"
-          onChange={(e) => {
-            set([curr[0], e.target.value]);
-          }}
-          errorMessage={error[1]}
-        />
       </div>
     </div>
   );
