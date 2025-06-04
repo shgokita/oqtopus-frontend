@@ -30,8 +30,8 @@ export const JobSearchForm = ({
       <div className={clsx('flex', 'justify-between', 'items-end', 'flex-nowrap', 'gap-6')}>
         <div className="flex-1">
           <Input
-            placeholder={t('job.list.search.id_placeholder')}
-            label={t('job.list.table.id')}
+            placeholder={t('job.list.search.job_search_query_input_placeholder')}
+            label={t('job.list.search.job_search_query_input')}
             value={params.query ?? ''}
             onChange={(e) =>
               setParams({ ...params, query: e.target.value === '' ? undefined : e.target.value })
