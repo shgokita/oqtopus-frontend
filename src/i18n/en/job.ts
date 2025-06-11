@@ -1,6 +1,3 @@
-import { error } from 'console';
-import { toast } from 'react-toastify';
-
 export default {
   list: {
     title: 'Job',
@@ -111,6 +108,7 @@ export default {
     upload_file_button: 'Load file',
     button: 'Submit',
     submit_and_view_job_button: 'Submit and view job',
+    submitting: 'Processing your request...',
     operator: {
       pauli: 'Operator (Pauli string)',
       coeff: 'Coefficient',
@@ -122,6 +120,8 @@ export default {
     error_message: {
       name: 'Please enter job name',
       shots: 'Please enter the positive number as shots',
+      shots_integer: 'Shots must be an integer',
+      shots_is_number: 'Shots must be a number',
       device: 'Please select a device',
       type: 'Please select a job type',
       program: 'Please enter the program',
