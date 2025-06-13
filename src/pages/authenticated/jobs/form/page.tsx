@@ -65,14 +65,15 @@ const isJsonParsable = (value: string | undefined): boolean => {
   }
 };
 
-const operatorItemSchema = yup.object({
-  pauli: yup
-    .string()
-    .required('Pauli field is required')
-    .matches(/^[IXYZ]+$/, 'Pauli field can contain only I, X, Y, Z')
-    .min(1, 'Field Pauli cant be empty'),
-  coeff: yup.number().required('Coeff is required'),
-});
+const operatorItemSchema = (t: (key: string) => string) =>
+  yup.object({
+    pauli: yup
+      .string()
+      .required(t('job.form.error_message.operator.pauli_required'))
+      .matches(/^([IXYZ][0-9]+)*$/, t('job.form.error_message.operator.pauli_match'))
+      .min(1, t('job.form.error_message.operator.pauli_empty')),
+    coeff: yup.number().required(t('job.form.error_message.operator.coeff_required')),
+  });
 
 const validationRules = (t: (key: string) => string): yup.ObjectSchema<FormInput> =>
   yup.object({
@@ -93,7 +94,7 @@ const validationRules = (t: (key: string) => string): yup.ObjectSchema<FormInput
     simulator: yup.string().test('', t('job.form.error_message.invalid_json'), isJsonParsable),
     mitigationEnabled: yup.boolean().required(),
     mitigation: yup.string().test('', t('job.form.error_message.invalid_json'), isJsonParsable),
-    operator: yup.array().of(operatorItemSchema).required(),
+    operator: yup.array().of(operatorItemSchema(t)).required(),
   });
 
 export default function Page() {
@@ -116,7 +117,8 @@ export default function Page() {
       name: '',
       description: '',
       type: JOB_TYPE_DEFAULT,
-      mitigationEnabled: false,
+      mitigationEnabled: true,
+      mitigation: '',
       programType: PROGRAM_TYPE_DEFAULT,
       program: '',
       transpilerType: TRANSPILER_TYPE_DEFAULT,
@@ -181,10 +183,9 @@ export default function Page() {
   }, [transpilerType]);
 
   useEffect(() => {
-    // set default transpiler info if transpiler_info not changed or empty
     if (
       mitigationEnabled &&
-      (mitigation === JOB_FORM_MITIGATION_INFO_DEFAULTS.PseudoInv || mitigation?.trim() === '')
+      (mitigation === JOB_FORM_MITIGATION_INFO_DEFAULTS.None || mitigation?.trim() === '')
     ) {
       setValue('mitigation', JOB_FORM_MITIGATION_INFO_DEFAULTS.PseudoInv);
     }
@@ -221,7 +222,7 @@ export default function Page() {
     setJobFileData(undefined);
   }, [jobFileData]);
 
-  const   onSubmit = async (data: FormInput) => {
+  const onSubmit = async (data: FormInput) => {
     if (isSubmitting) {
       toast.info(t('job.form.submitting'));
       return;
@@ -327,7 +328,14 @@ export default function Page() {
                 placeholder={t('job.form.shots_placeholder')}
                 label="shots"
                 type="number"
+                min={1}
                 defaultValue={SHOTS_DEFAULT}
+                onKeyDown={(event) => {
+                  if (/^[a-zA-Z+\-]$/.test(event.key)) {
+                    event.preventDefault();
+                    return;
+                  }
+                }}
                 {...register('shots')}
                 errorMessage={errors.shots && errors.shots.message}
               />

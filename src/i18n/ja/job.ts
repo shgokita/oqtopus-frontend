@@ -116,14 +116,14 @@ export default {
     error_message: {
       name: 'Job名を入力してください',
       shots: '正のショット数を入力してください',
-      shots_integer: 'Shotsは整数でなければなりません',
-      shots_is_number: 'Shotsは数値でなければなりません',
       device: 'デバイスを選択してください',
       type: 'ジョブタイプを選択してください',
       program: 'プログラムを入力してください',
       operator: {
-        pauli: '演算子をPauli string形式で入力してください (例: X 0 Y 1)',
-        coeff: '演算子の係数を入力してください',
+        pauli_required: 'Pauliフィールドは必須です',
+        pauli_match: 'Pauliフィールドでは I、X、Y、Z、および数字の0-9のみが許可されています',
+        pauli_empty: 'Pauliフィールドを空にすることはできません',
+        coeff_required: '係数フィールドは必須です',
       },
       invalid_json: '正しいJSON形式で入力してください',
     },
