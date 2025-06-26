@@ -223,7 +223,29 @@ export default function JobListPage() {
 
   return (
     <div>
-      <h2 className={clsx('text-primary', 'text-2xl', 'font-bold')}>{t('job.list.title')}</h2>
+      <h2 className={clsx('text-primary', 'text-2xl', 'font-bold', 'flex', 'flex-wrap', 'gap-2')}>
+        {t('job.list.title')}
+        <div
+          className={clsx('flex', 'flex-wrap', 'gap-2', 'justify-between', 'items-center')}
+          onClick={() => {
+            getJobsUpToPage(page - 1);
+          }}
+        >
+          <div
+            title={t('job.detail.reload')}
+            className={clsx(
+              'ml-2',
+              'bg-primary',
+              'rounded-md',
+              'overflow-hidden',
+              'p-1',
+              'cursor-pointer'
+            )}
+          >
+            <img src="/img/common/reload.svg" alt="Reload Icon" width={16} />
+          </div>
+        </div>
+      </h2>
       <Spacer className="h-8" />
       <div className={clsx('absolute', 'top-8', 'right-8')}>
         <NavLink color="secondary" to={'/jobs/form'}>
