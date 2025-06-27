@@ -1,0 +1,68 @@
+export type Complex = [number, number];
+
+export type GateX = { readonly _tag: "x"; target: number };
+export type GateY = { readonly _tag: "y"; target: number };
+export type GateZ = { readonly _tag: "z"; target: number };
+export type GateH = { readonly _tag: "h"; target: number };
+export type GateT = { readonly _tag: "t"; target: number };
+export type GateS = { readonly _tag: "s"; target: number };
+export type GateRX = { readonly _tag: "rx"; target: number; arg: number };
+export type GateRY = { readonly _tag: "ry"; target: number; arg: number }; // 修正
+export type GateRZ = { readonly _tag: "rz"; target: number; arg: number }; // 修正
+export type GateCNOT = { readonly _tag: "cnot"; target: number; control: number };
+export type GateCCNOT = { readonly _tag: "ccnot"; target: number; control1: number; control2: number };
+export type OpBarrier = { readonly _tag: "barrier"; target: number };
+
+export type QuantumGate =
+  | GateX
+  | GateY
+  | GateZ
+  | GateH
+  | GateT
+  | GateS
+  | GateRX
+  | GateRY
+  | GateRZ
+  | GateCNOT
+  | GateCCNOT
+  | OpBarrier;
+
+export const GateX = (target: number): GateX => ({ _tag: "x", target });
+export const GateY = (target: number): GateY => ({ _tag: "y", target });
+export const GateZ = (target: number): GateZ => ({ _tag: "z", target });
+export const GateH = (target: number): GateH => ({ _tag: "h", target });
+export const GateT = (target: number): GateT => ({ _tag: "t", target });
+export const GateS = (target: number): GateS => ({ _tag: "s", target });
+export const GateRX = (target: number, arg: number): GateRX => ({ _tag: "rx", target, arg });
+export const GateRY = (target: number, arg: number): GateRY => ({ _tag: "ry", target, arg });
+export const GateRZ = (target: number, arg: number): GateRZ => ({ _tag: "rz", target, arg });
+export const GateCNOT = (control: number, target: number): GateCNOT => ({ _tag: "cnot", control, target });
+export const GateCCNOT = (control1: number, control2: number, target: number): GateCCNOT => ({ _tag: "ccnot", control1, control2, target });
+export const OpBarrier = (target: number): OpBarrier => ({ _tag: "barrier", target });
+
+export const labelOfGate = (gate: QuantumGate): string => {
+  switch (gate._tag) {
+    case "barrier": return "Barrier";
+    case "ccnot": return "CCNot";
+    case "cnot": return "CNot";
+    case "h": return "H";
+    case "rx": return "RX";
+    case "ry": return "RY";
+    case "rz": return "RZ";
+    case "s": return "S";
+    case "t": return "T";
+    case "x": return "X";
+    case "y": return "Y";
+    case "z": return "Z"; 
+  }
+}
+
+export const isControlledGate = (g: QuantumGate) : g is GateCNOT | GateCCNOT => {
+  return g._tag == "cnot" || g?._tag == "ccnot"
+}
+
+
+export type ControlWireDirection = "up" | "down";
+
+export const Up: ControlWireDirection = "up";
+export const Down: ControlWireDirection = "down";

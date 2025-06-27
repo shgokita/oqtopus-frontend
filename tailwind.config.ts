@@ -52,6 +52,11 @@ const config: Config = {
       'table-border': '#d9d9d9',
       'cmd-bg': '#f3f4f6',
       'modal-bg': '#000000',
+
+      // Quantum Circuit colors
+      'gate-atomic': '#5179d5',
+      'gate-controlled': '#8255a7',
+      'gate-parametrized': '#c13c3c',
     },
     fontSize: {
       '2xs': '10px',
