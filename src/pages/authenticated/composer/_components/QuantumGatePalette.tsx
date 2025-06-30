@@ -1,8 +1,5 @@
 import clsx, { ClassValue } from "clsx";
 import { QuantumGate } from "../gates";
-import { useDrag } from "react-dnd"
-import { FromPalette, ItemTypeGate } from "../dnd";
-import { useEffect, useRef } from "react";
 import QuantumGatePaletteItem from "./QuantumGatePaletteItem";
 
 interface AtomicGateProps {
@@ -69,25 +66,8 @@ export interface QuantumGatePaletteProps {
 }
 
 export default (props: QuantumGatePaletteProps) => {
-  const ref = useRef<HTMLDivElement>(null)
-
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemTypeGate,
-    item: { type: ItemTypeGate, from: FromPalette },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    })
-  }));
-
-  useEffect(() => {
-    if (ref.current) {
-      drag(ref.current);
-    }
-  }, [ref, drag]);
-
   return (
     <div
-      ref={ref}
       className={clsx([
         "flex gap-1"
       ])}

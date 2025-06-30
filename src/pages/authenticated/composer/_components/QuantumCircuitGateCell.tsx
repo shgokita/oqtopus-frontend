@@ -24,32 +24,13 @@ export interface Props {
   qubitIndex: number;
   timestep: number;
   element: GateCellElement;
+  onClickControlQubit: (qubitIndex: number, timestep: number) => void;
   onDrop: (qubit: number, timestep: number, item: DragGateItem) => void;
 }
 
 export default (props: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const { element } = props;
-
-  // const [{ isOver, canDrop }, drop] = useDrop<DragGateItem, void, { isOver: boolean; canDrop: boolean }>({
-  //   accept: ItemTypeGate,
-  //   drop: (item) => {
-  //     props.onDrop(props.qubitIndex, props.timestep, item);
-  //   },
-  //   collect: (monitor) => ({
-  //     isOver: monitor.isOver(),
-  //     canDrop: monitor.canDrop(),
-  //   }),
-  // });
-
-  // const highlight = isOver && canDrop;
-
-  useEffect(() => {
-    if(ref.current) {
-      // drop(ref)
-    }
-  // }, [drop])
-  });
 
   return (
     <div
@@ -85,6 +66,10 @@ export default (props: Props) => {
                     }
                   </div>
                   <div
+                    onClick={() => props.onClickControlQubit(
+                      props.qubitIndex,
+                      props.timestep,
+                    )}
                     className="bg-gate-controlled w-[16px] h-[16px] rounded-full"
                   >
                   </div>

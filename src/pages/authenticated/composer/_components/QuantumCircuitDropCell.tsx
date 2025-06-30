@@ -12,7 +12,8 @@ export interface Props {
   holdingControlQubit: false | { targetQubitIndex: number; timestep: number };
   onDragIn: (qubit: number, timestep: number, part: DropCellPart) => void
   onDrop: (qubit: number, timestep: number, part: DropCellPart, item: DragGateItem) => void;
-  onSetControlQubit: (controlQubitIndex: number) => void
+  onDragControlQubit: (qubit: number, timestep: number, part: DropCellPart) => void;
+  onSetControlQubit: (controlQubitIndex: number, timestep: number) => void
 }
 
 export default (props: Props) => {
@@ -63,12 +64,12 @@ export default (props: Props) => {
 
   const handleMouseEnter = () => {
     if (props.holdingControlQubit === false) return;
-    props.onDragIn(props.qubitIndex, props.timestep, props.part)
+    props.onDragControlQubit(props.qubitIndex, props.timestep, props.part);
   }
 
   const handleClick = () => {
     if (props.holdingControlQubit === false) return;
-    props.onSetControlQubit(props.qubitIndex)
+    props.onSetControlQubit(props.qubitIndex, props.timestep)
   }
   return (
     <div

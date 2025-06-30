@@ -66,3 +66,22 @@ export type ControlWireDirection = "up" | "down";
 
 export const Up: ControlWireDirection = "up";
 export const Down: ControlWireDirection = "down";
+
+export const compareGate = (lhs: QuantumGate, rhs: QuantumGate): boolean => {
+  if (lhs.target != rhs.target) return false;
+
+  switch (lhs._tag) {
+    case "cnot":
+      return rhs._tag === "cnot" && lhs.control === rhs.control;
+    case "ccnot":
+      return rhs._tag === "ccnot" && lhs.control1 === rhs.control1 && lhs.control2 === rhs.control2;
+    case "rx":
+      return rhs._tag === "rx" && lhs.arg === rhs.arg;
+    case "ry":
+      return rhs._tag === "ry" && lhs.arg === rhs.arg;
+    case "rz":
+      return rhs._tag === "rz" && lhs.arg === rhs.arg;
+    default:
+      return lhs._tag === rhs._tag;
+  }
+}

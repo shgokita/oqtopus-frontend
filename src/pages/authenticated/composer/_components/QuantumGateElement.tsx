@@ -83,7 +83,7 @@ export default function QuantumGateElement({ gate }: Props) {
     <div
       className={clsx([
         ["w-10", "h-10"],
-        ["text-primary-content", "size-12"],
+        ["text-primary-content"],
         ["transition-all", "duration-300"]
       ])}
     >
@@ -121,11 +121,27 @@ export default function QuantumGateElement({ gate }: Props) {
               return (
                 <div
                   className={clsx([
-                    ["rounded"],
-                    ["bg-status-job-failed"]
+                    ["w-full", "h-full", "rounded",],
+                    ["flex", "flex", "items-center", "justify-center"],
+                    ["bg-gate-parametrized"],
                   ])}
                 >
-                  {labelOfGate(gate)}
+                  <span
+                    className={clsx([
+                      ["text-primary-content", "font-bold"],
+                      ["text-xs"]
+                    ])}
+                  >
+                    {labelOfGate(gate)}
+                  </span>
+                  <span
+                    className={clsx([
+                      ["text-primary-content"],
+                      ["text-xs"]
+                    ])}
+                  >
+                    (θ)
+                  </span>
                 </div>
               )
 
@@ -134,7 +150,9 @@ export default function QuantumGateElement({ gate }: Props) {
               return (
                 <ControlledGate
                   wireDirections={
-                    gate.control < gate.target ? [Up] : [Down]
+                    gate.control == gate.target
+                      ? []
+                      : (gate.control < gate.target ? [Up] : [Down])
                   }
                   label="+"
                 />
