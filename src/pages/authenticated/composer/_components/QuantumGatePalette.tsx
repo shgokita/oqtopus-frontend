@@ -63,6 +63,8 @@ const CCNotGate = () => {
 
 export interface QuantumGatePaletteProps {
   supportedGates: QuantumGate["_tag"][];
+  onDragStart: (gate: QuantumGate["_tag"]) => void;
+  onDragEnd: () => void;
 }
 
 export default (props: QuantumGatePaletteProps) => {
@@ -85,6 +87,8 @@ export default (props: QuantumGatePaletteProps) => {
                 <QuantumGatePaletteItem
                   gateTag={gateTag}
                   key={gateTag}
+                  onDragStart={() => props.onDragStart(gateTag)}
+                  onDragEnd={props.onDragEnd}
                 >
                   <AtomicGate
                     label={gateTag}
@@ -97,6 +101,8 @@ export default (props: QuantumGatePaletteProps) => {
                 <QuantumGatePaletteItem
                   gateTag={gateTag}
                   key={gateTag}
+                  onDragStart={() => props.onDragStart(gateTag)}
+                  onDragEnd={props.onDragEnd}
                 >
                   <CNotGate 
                   />
@@ -107,6 +113,8 @@ export default (props: QuantumGatePaletteProps) => {
                 <QuantumGatePaletteItem
                   gateTag={gateTag}
                   key={gateTag}
+                  onDragStart={() => props.onDragStart(gateTag)}
+                  onDragEnd={props.onDragEnd}
                 >
                   <CCNotGate 
                   />
@@ -119,6 +127,8 @@ export default (props: QuantumGatePaletteProps) => {
                 <QuantumGatePaletteItem
                   gateTag={gateTag}
                   key={gateTag}
+                  onDragStart={() => props.onDragStart(gateTag)}
+                  onDragEnd={props.onDragEnd}
                 >
                   <AtomicGate 
                     label={gateTag}

@@ -1,14 +1,22 @@
 import { GateCCNOT, GateCNOT, GateH, GateRX, GateRY, GateRZ, GateS, GateT, GateX, GateY, GateZ, QuantumGate } from "./gates";
 
 export const ItemTypeGate = "GATE" as const;
+export const ItemTypeMoveGate = "MOVE_GATE" as const;
 
 export type DragGateItem = {
   type: typeof ItemTypeGate;
-  from: typeof FromPalette | typeof FromCanvas;
+  from: typeof FromPalette;
   gateTag: string;
   sourceQubit?: number;
   sourceTimestep?: number; 
 };
+
+export type DragMoveGateItem = {
+  type: typeof ItemTypeMoveGate;
+  from: typeof FromCanvas;
+  sourceQubit: number;
+  sourceTimestep: number;
+}
 
 export const FromPalette = "palette" as const;
 export const FromCanvas = "canvas" as const;

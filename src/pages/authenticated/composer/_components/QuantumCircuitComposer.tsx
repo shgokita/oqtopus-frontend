@@ -7,7 +7,6 @@ import { QuantumCircuit } from "../circuit"
 import { GateCNOT, GateH, GateX, GateZ, QuantumGate } from "../gates"
 import clsx from "clsx"
 import QuantumGatePalette from "./QuantumGatePalette";
-import { DragGateItem } from "../dnd";
 
 
 const allGates: QuantumGate["_tag"][] =
@@ -18,7 +17,7 @@ const allGates: QuantumGate["_tag"][] =
     "s",
     "t",
     "cnot",
-    "ccnot",
+    // "ccnot",
     "rx",
     "ry",
     "rz",
@@ -37,8 +36,15 @@ export default () => {
     ]
   });
 
+  const [grabbingGate, setGrabbingGate] = useState<null | QuantumGate["_tag"]>(null);
+
+
   const handleCircuitUpdate = (newCircuit: QuantumCircuit) => {
     setCircuit(newCircuit);
+  }
+
+  const handleDragFromGatePalette = (gateTag: QuantumGate["_tag"]) => {
+    setGrabbingGate(gateTag);
   }
 
   return (
@@ -64,12 +70,15 @@ export default () => {
         />
         <QuantumGatePalette
           supportedGates={allGates}
+          onDragStart={handleDragFromGatePalette}
+          onDragEnd={() => setGrabbingGate(null)}
         />
       </div>
 
       <QuantumCircuitCanvas
         circuit={circuit}
         onCircuitUpdate={handleCircuitUpdate}
+        draggingFromPalette={grabbingGate !== null}
       />
     </DndProvider>
   )

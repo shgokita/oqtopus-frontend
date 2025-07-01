@@ -1,13 +1,25 @@
 import clsx, { ClassValue } from "clsx";
 import { ControlWireDirection, Down, QuantumGate, Up, labelOfGate } from "../gates";
+import { useEffect, useRef } from "react";
+import { useDrag } from "react-dnd";
+import { DragMoveGateItem, FromCanvas, ItemTypeGate, ItemTypeMoveGate } from "../dnd";
 
 interface Props {
+  qubitIndex: number;
+  timestep: number;
   gate: QuantumGate;
+  isDragging: boolean;
+  previewDirections?: ("up" | "down")[];
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  resetControlGate?: () => void
 }
 
 interface ControlledGateProps {
   label: string;
   wireDirections: ControlWireDirection[];
+  previewWire: boolean;
+  resetControlGate?: () => void;
 }
 
 const ControlledGate = (props: ControlledGateProps) => {
@@ -16,6 +28,9 @@ const ControlledGate = (props: ControlledGateProps) => {
       className={clsx([
         ['relative', 'w-full', 'h-full']
       ])}
+      onClick={() => {
+        props.resetControlGate?.();
+      }}
     >
       <div
         className={clsx([
@@ -41,6 +56,7 @@ const ControlledGate = (props: ControlledGateProps) => {
               ['absolute', 'top-[-12px]', 'left-0', 'z-10'],
               ["w-full", "h-[12px]"],
               ["flex", "items-center", "justify-center"],
+              props.previewWire ? ["opacity-50"] : []
             ])}
           >
             <div
@@ -61,6 +77,7 @@ const ControlledGate = (props: ControlledGateProps) => {
               ['absolute', 'bottom-[-12px]', 'left-0', 'z-10'],
               ["w-full", "h-[12px]"],
               ["flex", "items-center", "justify-center"],
+              props.previewWire ? ["opacity-50"] : []
             ])}
           >
             <div
@@ -78,13 +95,48 @@ const ControlledGate = (props: ControlledGateProps) => {
   )
 }
 
-export default function QuantumGateElement({ gate }: Props) {
+export default function QuantumGateElement(props: Props) {
+  const gate = props.gate
+  const ref = useRef<HTMLDivElement>(null);
+  const [{ isDragging }, drag, preview] = useDrag<DragMoveGateItem, void, { isDragging: boolean }>(() => ({
+    type: ItemTypeMoveGate,
+    item: {
+      type: ItemTypeMoveGate,
+      from: FromCanvas,
+
+      sourceQubit: props.qubitIndex,
+      sourceTimestep: props.timestep,
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    })
+  }))
+
+  useEffect(() => {
+    if (ref.current) {
+      drag(ref.current);
+    }
+  }, [drag])
+
+  useEffect(() => {
+    if (isDragging) {
+      props.onDragStart?.();
+    }
+    else {
+      props.onDragEnd?.();
+    }
+  }, [isDragging])
+
   return (
     <div
+      ref={ref}
       className={clsx([
         ["w-10", "h-10"],
         ["text-primary-content"],
-        ["transition-all", "duration-300"]
+        ["transition-all", "duration-300"],
+        [props.isDragging ? "cursor-grabbing" : "cursor-pointer"
+        ],
+        [isDragging ? "opacity-50" : "opacity-100"],
       ])}
     >
       {
@@ -101,6 +153,7 @@ export default function QuantumGateElement({ gate }: Props) {
                   className={clsx([
                     ["w-full", "h-full", "rounded",],
                     ["flex", "items-center", "justify-center"],
+                    props.isDragging ? ["opacity-50"] : [],
                     ["bg-gate-atomic", "text-center", "align-middle"]
                   ])}
                 >
@@ -147,24 +200,33 @@ export default function QuantumGateElement({ gate }: Props) {
 
 
             case "cnot":
+              const cnotWireDirections = (() => {
+                return [
+                  (props.previewDirections?.includes("up") || gate.control < gate.target) ? [Up] : [],
+                  (props.previewDirections?.includes("down") || gate.control > gate.target) ? [Down] : []
+                ].flat() as ControlWireDirection[]
+              })()
               return (
                 <ControlledGate
-                  wireDirections={
-                    gate.control == gate.target
-                      ? []
-                      : (gate.control < gate.target ? [Up] : [Down])
-                  }
+                  wireDirections={cnotWireDirections}
+                  previewWire={props.previewDirections !== undefined}
                   label="+"
+                  resetControlGate={props.resetControlGate}
                 />
               );
             case "ccnot":
+              const ccnotWireDirections = (() => {
+                return [
+                  (props.previewDirections?.includes("up") || gate.control1 < gate.target || gate.control2 < gate.target) ? [Up] : [],
+                  (props.previewDirections?.includes("down") || gate.control1 > gate.target || gate.control2 > gate.target) ? [Down] : []
+                ].flat() as ControlWireDirection[]
+              })()
               return (
                 <ControlledGate
-                  wireDirections={[
-                    Math.min(gate.control1, gate.control2) < gate.target ? [Up] : [],
-                    Math.max(gate.control1, gate.control2) > gate.target ? [Down] : []
-                  ].flat()}
+                  wireDirections={ccnotWireDirections}
                   label="+"
+                  previewWire={props.previewDirections !== undefined}
+                  resetControlGate={props.resetControlGate}
                 />
               );
           }
