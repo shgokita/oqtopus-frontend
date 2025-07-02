@@ -49,11 +49,20 @@ const useProvideAuth = (): UseAuth => {
     Auth.currentAuthenticatedUser()
       .then((result: any) => {
         setUsername(result.username);
+        // MFAが設定されている場合のみチェック、設定されていない場合も認証済みとする
         if (Object.prototype.hasOwnProperty.call(result, 'preferredMFA')) {
           if (result.preferredMFA === 'SOFTWARE_TOKEN_MFA') {
             setIsAuthenticated(true);
             setInitialized(true);
+          } else {
+            // MFAが設定されているが有効でない場合も認証済みとする
+            setIsAuthenticated(true);
+            setInitialized(true);
           }
+        } else {
+          // MFAが設定されていない場合も認証済みとする
+          setIsAuthenticated(true);
+          setInitialized(true);
         }
         // TODO: Loader
         // setLoading(false);
@@ -87,11 +96,17 @@ const useProvideAuth = (): UseAuth => {
       setUsername(result.username);
       setPassword(result.password);
       const hasChallenge = Object.prototype.hasOwnProperty.call(result, 'challengeName');
+      
+      if (!hasChallenge) {
+        // MFAチャレンジがない場合、直接認証を完了
+        setIsAuthenticated(true);
+        setInitialized(true);
+        return { success: true, message: '' };
+      }
+      
+      // MFAチャレンジがある場合、従来通りの処理
       setIsAuthenticated(false);
       setInitialized(true);
-      if (!hasChallenge) {
-        return { success: false, message: 'MFAを設定してください。' };
-      }
       return { success: true, message: '' };
     } catch (error) {
       console.log(error);

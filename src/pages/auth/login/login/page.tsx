@@ -51,7 +51,14 @@ export default function LoginPage() {
           .signIn(data.username, data.password)
           .then(({ success, message }) => {
             if (success) {
-              navigate('/confirm-mfa');
+              // 認証状態をチェックして適切に遷移
+              if (auth.isAuthenticated) {
+                // MFAチャレンジがなく直接認証が完了した場合
+                navigate('/dashboard');
+              } else {
+                // MFAチャレンジがある場合
+                navigate('/confirm-mfa');
+              }
               return;
             }
             alert(message);
