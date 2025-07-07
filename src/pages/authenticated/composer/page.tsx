@@ -59,7 +59,7 @@ const renderQasm = (qubitNumber: number, steps: ExtendedGate[]): string => {
 
   const measurementPart = "c = measure q;"
   const moduleHeader = `// Sent from OQTOPUS composer
-// ${JSON.stringify({ qubitNumber, steps })}
+// ${JSON.stringify({ qubitNumber, steps: steps.filter(g => g !== undefined && g._tag !== "$dummy") })}
   `;
   return `${moduleHeader}
   OPENQASM 3;
