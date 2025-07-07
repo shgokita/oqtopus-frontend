@@ -25,6 +25,7 @@ interface ControlledGateProps {
   previewWire: boolean;
   resetControlGate?: () => void;
   onClick?: () => void;
+  static?: boolean;
 }
 
 const ControlledGate = (props: ControlledGateProps) => {
@@ -124,7 +125,7 @@ export default function QuantumGateElement(props: Props) {
   }))
 
   useEffect(() => {
-    if (ref.current) {
+    if (ref.current && props.static === false) {
       drag(ref.current);
     }
   }, [drag])

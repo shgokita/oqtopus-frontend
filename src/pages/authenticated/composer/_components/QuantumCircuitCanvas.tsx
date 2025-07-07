@@ -363,6 +363,16 @@ const handleDragIn = (
     }
   }
 
+export const staticCircuitProps = (circuit: QuantumCircuit): Props => ({
+  circuit,
+  mode: "normal",
+  toggleMode: _1 => () => { },
+  onCircuitUpdate: _ => { },
+  draggingFromPalette: false,
+  fixedQubitNumber: true,
+  static: true
+});
+
 interface Props {
   circuit: QuantumCircuit;
   mode: Mode;
@@ -370,6 +380,7 @@ interface Props {
   onCircuitUpdate: (newCircuit: QuantumCircuit) => void;
   draggingFromPalette: boolean;
   fixedQubitNumber: boolean;
+  static: boolean;
 }
 
 type ComposedProgram = (undefined | ExtendedGate)[][];
@@ -934,6 +945,7 @@ export default (props: Props) => {
                               return null
                             })()
                             }
+                            static={props.static}
                             focused={
                               holdingGate !== false
                               && qIndex == holdingGate.dropQubitIndex
@@ -948,19 +960,25 @@ export default (props: Props) => {
                                 && holdingControlQuit.timestep == tIndex
                               )
                             }
-                            onClickGateElement={handleGateElementClick}
-                            onClickControlQubit={handleControlQubitClick(holdingControlQuit, composedProgram, setHoldingControlQubit)}
-                            onClickControlledGate={handleControlledGateClick}
-                            onDragStart={() => {
-                              setDraggingFromCanvas({
-                                isDragging: true,
-                                sourceQubitIndex: qIndex,
-                                sourceTimestep: tIndex
-                              });
-                            }}
-                            onDragEnd={() => {
-                              setDraggingFromCanvas({ isDragging: false });
-                            }}
+                            onClickGateElement={props.static ? (_1, _2) => { } : handleGateElementClick}
+                            onClickControlQubit={props.static ? (..._) => { } : handleControlQubitClick(holdingControlQuit, composedProgram, setHoldingControlQubit)}
+                            onClickControlledGate={props.static ? (..._) => { } : handleControlledGateClick}
+                            onDragStart={props.static
+                              ? (..._) => { }
+                              : () => {
+                                setDraggingFromCanvas({
+                                  isDragging: true,
+                                  sourceQubitIndex: qIndex,
+                                  sourceTimestep: tIndex
+                                });
+                              }
+                            }
+                            onDragEnd={props.static
+                              ? () => { }
+                              : () => {
+                                setDraggingFromCanvas({ isDragging: false });
+                              }
+                            }
                             key={`q${qIndex}-t${tIndex}`}
                           />
                         </div>
@@ -997,7 +1015,7 @@ export default (props: Props) => {
                 [props.draggingFromPalette || draggingFromCanvas.isDragging || holdingControlQuit !== false ? "z-30" : "z-10"]
               ])}
             >
-              {circuitDepth > 0
+              {props.static === false && circuitDepth > 0
                 ? [...new Array(circuitDepth)].map((_, tIndex) =>
                   [...new Array(qubitNumber)].map((_, qIndex) => {
                     return (
@@ -1123,7 +1141,7 @@ export default (props: Props) => {
                       qubitIndex={0}
                       timestep={0}
                       active={false}
-                      static
+                      static={props.static}
                       isDragging={false}
                       onClick={() => { }}
                     />
@@ -1149,7 +1167,7 @@ export default (props: Props) => {
                               Param
                             </div>
                             <div className="sm:col-span-8 col-span-12 px-3">
-                              <div className="flex flex-col"> 
+                              <div className="flex flex-col">
                                 <Slider
                                   key="param-slider1"
                                   aria-label="θ"
@@ -1196,19 +1214,21 @@ export default (props: Props) => {
                 })()}
               </div>
 
-              <div className="w-full mt-auto">
-                <Button
-                  onClick={() => handleGateVierwerUpdate(
-                    composedProgram,
-                    (c) => handleComposedProgramUpdated(c, qubitNumber.valueOf()),
-                    gateViewer,
-                    setGateViewer,
-                  )}
-                  color="secondary"
-                >
-                  {t('composer.gate_viewer.update')}
-                </Button>
-              </div>
+              {props.static === false ?
+                <div className="w-full mt-auto">
+                  <Button
+                    onClick={() => handleGateVierwerUpdate(
+                      composedProgram,
+                      (c) => handleComposedProgramUpdated(c, qubitNumber.valueOf()),
+                      gateViewer,
+                      setGateViewer,
+                    )}
+                    color="secondary"
+                  >
+                    {t('composer.gate_viewer.update')}
+                  </Button>
+                </div>
+                : null}
             </div>
           )
           : null
