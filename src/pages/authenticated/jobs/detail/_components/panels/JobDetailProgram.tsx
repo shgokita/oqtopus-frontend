@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { QuantumCircuit } from '@/pages/authenticated/composer/circuit';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Switch } from '@mui/material';
 
 export interface JobDetailProgramProps {
   program: string[];
@@ -26,7 +27,8 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
   const { t } = useTranslation();
   const text = jobInfo.program.join('\n');
   const sentFromComposer = isSentFromComposer(text);
-  const [circuit, setCircuit] = useState<QuantumCircuit>({ qubitNumber: 0, steps: []})
+  const [circuit, setCircuit] = useState<QuantumCircuit>({ qubitNumber: 0, steps: [] })
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     if (isSentFromComposer(text)) {
@@ -37,7 +39,7 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
           const parsed = JSON.parse(programJson);
           setCircuit(parsed);
         }
-        catch (_) {}
+        catch (_) { }
       }
       console.log(program)
     }
@@ -63,6 +65,10 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
                 height={32}
               />
             </span>
+            <Switch
+              value={showCode}
+              onChange={() => setShowCode(!showCode)}
+            />
             <span
               className={clsx([
                 ['text-primary', 'cursor-pointer', 'm-2']
@@ -82,22 +88,30 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
         <div className={clsx('text-xs')}>{t('job.detail.program.nodata')}</div>
       ) : (
         <>
-        {/* FIXME Far from an ideal solution... We REALLY do not need to put DndProvider here! */}
-          <DndProvider
-            backend={HTML5Backend}
-          >
-            <QuantumCircuitCanvas
-              {...staticCircuitProps(circuit)}        
-            />
-          </DndProvider>
-          <div className={clsx('relative')}>
-            <div className={clsx('p-3', 'rounded', 'bg-cmd-bg', 'text-sm')}>
-              <SimpleBar style={{ maxHeight: jobInfo.maxHeight }}>
-                <div className={clsx('whitespace-pre-wrap')}>{text}</div>
-              </SimpleBar>
-            </div>
-            <ClipboardCopy text={text} />
-          </div>
+          {/* FIXME Far from an ideal solution... We REALLY do not need to put DndProvider here! */}
+          { showCode ? (
+
+              <DndProvider
+                backend={HTML5Backend}
+              >
+                <QuantumCircuitCanvas
+                  {...staticCircuitProps(circuit)}
+                />
+              </DndProvider>
+            )
+              : (
+                <div className={clsx('relative')}>
+                  <div className={clsx('p-3', 'rounded', 'bg-cmd-bg', 'text-sm')}>
+                    <SimpleBar style={{ maxHeight: jobInfo.maxHeight }}>
+                      <div className={clsx('whitespace-pre-wrap')}>{text}</div>
+                    </SimpleBar>
+                  </div>
+                  <ClipboardCopy text={text} />
+                </div>
+
+              )
+
+          }
         </>
       )}
     </>
