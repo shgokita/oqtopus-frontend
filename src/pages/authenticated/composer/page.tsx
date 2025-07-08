@@ -114,7 +114,7 @@ export default function Page() {
     operators: []
   });
 
-
+  const [jobId, setJobId] = useState<null | string>(null);
 
   const fetchDevices = async () => {
     setBusy(true);
@@ -153,6 +153,7 @@ export default function Page() {
     try {
       const jobId = await jobApi.submitJob(req);
       toast.success(t('job.form.toast.success'));
+      setJobId(jobId);
     }
     catch (e) {
       toast.error(t('job.form.toast.error'));
@@ -221,6 +222,7 @@ export default function Page() {
       <ControlPanel
         onSubmit={handleSubmitJob}
         devices={devices}
+        jobId={jobId}
         jobType={jobType}
         busy={busy}
         mkProgram={() => ({

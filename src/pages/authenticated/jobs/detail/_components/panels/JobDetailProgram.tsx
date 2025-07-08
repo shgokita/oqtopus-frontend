@@ -41,7 +41,6 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
         }
         catch (_) { }
       }
-      console.log(program)
     }
   }, [text])
 
