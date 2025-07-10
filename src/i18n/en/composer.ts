@@ -27,7 +27,8 @@ export default {
       device_id: "Device ID",
       shots: "Shots",
       shots_placeholder: "Enter shots.",
-      submit: "Submit"
+      submit: "Submit",
+      see_result: "See result",
     },
     siml: {
       tab_label: "Simulation"

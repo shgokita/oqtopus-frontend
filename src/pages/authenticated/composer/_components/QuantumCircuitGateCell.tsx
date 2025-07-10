@@ -30,6 +30,7 @@ export interface Props {
   timestep: number;
   element: GateCellElement;
   focused: boolean;
+  static?: boolean;
   active: boolean;
   isDragging: boolean;
   previewControl: PreviewControl | null;
@@ -76,6 +77,7 @@ export default (props: Props) => {
                   isDragging={props.isDragging}
                   gate={element.gate}
                   active={props.active}
+                  static={props.static}
                   qubitIndex={props.qubitIndex}
                   timestep={props.timestep}
                   previewDirections={props.previewControl?.directions}

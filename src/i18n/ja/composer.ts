@@ -25,7 +25,8 @@ export default {
       device_id: "デバイスID",
       shots: "ショット数",
       shots_placeholder: "ショット数を入力してください",
-      submit: "送信"
+      submit: "送信",
+      see_result: "結果を確認する",
     },
     siml: {
       tab_label: "シミュレーション"

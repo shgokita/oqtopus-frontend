@@ -56,6 +56,7 @@ export default (props: QuantumCircuitComposerProps) => {
         toggleMode={toggleMode}
         onCircuitUpdate={props.onCircuitUpdate}
         draggingFromPalette={grabbingGate !== null}
+        static={false}
         fixedQubitNumber={props.fixedQubitNumber || false}
       />
     </DndProvider>
