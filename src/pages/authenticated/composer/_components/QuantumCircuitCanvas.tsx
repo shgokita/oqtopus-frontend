@@ -768,6 +768,8 @@ export default (props: Props) => {
   }
 
   const handleControlledGateClick = (qIndex: number, tIndex: number) => {
+    if (props.mode === "eraser") return;
+
     const gate = composedProgram[qIndex][tIndex];
     switch (gate?._tag) {
       case "cnot":
@@ -775,12 +777,13 @@ export default (props: Props) => {
 
         composedProgram.forEach((w, i) => {
           w[tIndex] = i == qIndex
-            ? (props.mode == "eraser" ? undefined : { ...gate, control: qIndex })
-            : [...new Array(cnotTo - cnotFrom + 1)].map((_, j) => j).includes(i)
+            ? ({ ...gate, control: qIndex })
+            : [...new Array(cnotTo - cnotFrom + 1)].map((_, j) => cnotFrom + j).includes(i)
               ? undefined
               : w[tIndex];
         });
         handleComposedProgramUpdated(composedProgram, qubitNumber.valueOf());
+        
         setHoldingControlQubit({ targetQubitIndex: qIndex, hovered: qIndex, timestep: tIndex, rest: 1 });
         props.toggleMode("control")();
         break;
@@ -795,13 +798,13 @@ export default (props: Props) => {
       default:
         return;
     }
-    if (props.mode === "eraser") {
-      handleComposedProgramUpdated((() => {
-        composedProgram[qIndex][tIndex] = undefined;
-        return composedProgram;
-      })(), qubitNumber.valueOf());
-      setHoldingControlQubit(false);
-    }
+    // if (props.mode === "eraser") {
+    //   handleComposedProgramUpdated((() => {
+    //     composedProgram[qIndex][tIndex] = undefined;
+    //     return composedProgram;
+    //   })(), qubitNumber.valueOf());
+    //   setHoldingControlQubit(false);
+    // }
   };
 
   const handleQubitClick = (qIndex: number) => {
@@ -853,7 +856,16 @@ export default (props: Props) => {
                   key={qIndex}
                   onClick={() => handleQubitClick(qIndex)}
                 >
-                  <span>q{qIndex}</span>
+                  <span
+                    className={clsx([
+                      props.mode === "eraser" 
+                        ? (composedProgram[qIndex].every(x => x === undefined || x._tag == "$dummy")
+                            ? ["text-neutral-content hover:text-status-job-failed"] 
+                            : ["text-disable-bg"]
+                          )
+                        : []
+                    ])}
+                  >q{qIndex}</span>
                 </div>
               )
             })
