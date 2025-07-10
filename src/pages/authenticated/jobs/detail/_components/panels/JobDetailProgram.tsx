@@ -59,7 +59,7 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
                 ['text-primary', 'cursor-pointer', 'm-2']
               ])}
             >
-              <img src="/public/img/common/icon-code.svg"
+              <img src="/img/common/icon-code.svg"
                 width={32}
                 height={32}
               />
@@ -73,7 +73,7 @@ export const JobDetailProgram: React.FC<JobDetailProgramProps> = (
                 ['text-primary', 'cursor-pointer', 'm-2']
               ])}
             >
-              <img src="/public/img/common/icon-quantum-circuit.svg"
+              <img src="/img/common/icon-quantum-circuit.svg"
                 width={24}
                 height={24}
               />

@@ -357,7 +357,7 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
             [showMoreOptions ? "rotate-90" : "-rotate-90"]
           ])}>
             <img
-              src="/public/img/common/sidebar_arrow.svg"
+              src="/img/common/sidebar_arrow.svg"
             />
           </span>
         </div>
@@ -455,12 +455,12 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
           </Button>
 
           {props.jobId !== null
-            ? <div 
-                className="flex items-center gap-4 text-link cursor-pointer"
-                onClick={() => {
-                  navigate(`/jobs/${props.jobId}`);
-                }}
-              >
+            ? <div
+              className="flex items-center gap-4 text-link cursor-pointer"
+              onClick={() => {
+                navigate(`/jobs/${props.jobId}`);
+              }}
+            >
               <span>
                 {t("composer.control_panel.exec.see_result")}
               </span>
