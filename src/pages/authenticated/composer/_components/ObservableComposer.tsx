@@ -120,6 +120,7 @@ export default (props: ObservableComposerProps) => {
             toggleMode={toggleMode}
             onCircuitUpdate={handleObservableUpdate}
             draggingFromPalette={grabbingGate !== null}
+            static={false}
             fixedQubitNumber
           />
         </DndProvider>

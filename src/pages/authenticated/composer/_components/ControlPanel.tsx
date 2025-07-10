@@ -6,11 +6,12 @@ import { Button } from "@/pages/_components/Button";
 import { Input } from "@/pages/_components/Input";
 import { Select } from "@/pages/_components/Select";
 import { Spacer } from "@/pages/_components/Spacer";
-import { Checkbox } from "@mui/material";
+import { TextArea } from "@/pages/_components/TextArea";
 import clsx from "clsx"
 import { ReactNode, useEffect, useState } from "react"
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router";
 
 export type TabPanelItem = { id: string; label: string; disabled: boolean; };
 interface TabPanelsProps {
@@ -98,6 +99,7 @@ export interface ControlPanelProps {
   jobType: JobTypeType;
   devices: Device[];
   busy: boolean;
+  jobId: null | string;
   mkProgram: () => { program: string, qubitNumber: number };
   mkOperator: () => JobsOperatorItem[];
   onSubmit: (req: JobsSubmitJobRequest) => Promise<void>;
@@ -126,6 +128,7 @@ export default (props: ControlPanelProps) => {
                   mkProgram={props.mkProgram}
                   mkOperator={props.mkOperator}
                   devices={props.devices}
+                  jobId={props.jobId}
                   onSubmit={props.onSubmit}
                   key="control-panel-exec"
                 />
@@ -141,24 +144,43 @@ export default (props: ControlPanelProps) => {
   );
 }
 
+
 interface ExecutionFormInput {
   name: string;
   description: string;
   device_id: string;
   shots: number;
+  transpiler_option: TranspilerOption;
+  mitigation_option: MitigationOption;
 }
 
 interface ControlPanelExecutionProps {
   devices: Device[];
   jobType: JobTypeType;
   busy: boolean;
+  jobId: null | string;
   mkProgram: () => { program: string, qubitNumber: number };
   mkOperator: () => JobsOperatorItem[];
   onSubmit: (req: JobsSubmitJobRequest) => Promise<void>;
 }
 
+type TranspilerOption = (keyof typeof transpilerOptions) | "custom";
+type MitigationOption = (keyof typeof mitigationOptions);
+
+const transpilerOptions = {
+  default: { transpiler_lib: "qiskit", transpiler_options: { optimization_level: 2 } },
+  none: { transpiler_lib: null },
+};
+
+const mitigationOptions = {
+  none: {},
+  ro_pseudo_inverse: { readout: "pseudo_inverse" }
+}
+
 export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
@@ -172,8 +194,24 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
       description: "",
       device_id: "",
       shots: 1000,
+      transpiler_option: "default",
+      mitigation_option: "ro_pseudo_inverse",
     },
   });
+
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [transpilerInfoInput, setTranspilerInfoInput] = useState("")
+  const [simulatorInfoInput, setSimulatorInfoInput] = useState("{}")
+  const [transpilerInfo, setTranspilerInfo] = useState<Record<string, any>>(transpilerOptions.default);
+  const [simulatorInfo, setSimulatorInfo] = useState<Record<string, any>>({});
+  const [mitigationInfo, setMitigationInfo] = useState<Record<string, any>>(mitigationOptions.ro_pseudo_inverse);
+
+  const [advancedOptionsErrors, setAdvancedOptionsErrors] = useState({
+    transpilerInfo: "",
+    simulatorInfo: ""
+  });
+
+  const formValues = watch();
 
   useEffect(() => {
     const availableDevice = props.devices.find((device) => device.status === "available");
@@ -182,6 +220,17 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
       setValue("device_id", availableDevice.id ?? undefined);
     }
   }, [props.devices]);
+
+  useEffect(() => {
+    if (formValues.transpiler_option !== "custom") {
+      setTranspilerInfo(transpilerOptions[formValues.transpiler_option]);
+      setTranspilerInfoInput(JSON.stringify(transpilerOptions[formValues.transpiler_option]))
+    }
+  }, [formValues.transpiler_option]);
+
+  useEffect(() => {
+    setMitigationInfo(mitigationOptions[formValues.mitigation_option]);
+  }, [formValues.mitigation_option]);
 
   const handleClickSubmit = async (form: ExecutionFormInput) => {
     const mkJobInfo = (): [JobsSubmitJobInfo, number] => {
@@ -226,6 +275,9 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
         job_info: submitJobInfo,
         job_type: props.jobType,
         shots: form.shots,
+        transpiler_info: transpilerInfo,
+        mitigation_info: mitigationInfo,
+        simulator_info: simulatorInfo
       };
 
       props.onSubmit(req);
@@ -290,8 +342,109 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
       </div>
 
       <Spacer className="h-8" />
+
+      <div className="flex items-center justify-between">
+        <div
+          className="text-link cursor-pointer text-nowrap flex items-center"
+          onClick={() => {
+            setShowMoreOptions(!showMoreOptions)
+          }}
+        >
+          <span>Advanced Options</span>
+          <span className={clsx([
+            ["w-10", "h-10", "flex", "justify-center", "items-center"],
+            ["origin-center", "transition-all", "duration-200"],
+            [showMoreOptions ? "rotate-90" : "-rotate-90"]
+          ])}>
+            <img
+              src="/img/common/sidebar_arrow.svg"
+            />
+          </span>
+        </div>
+        <hr className="w-full text-neutral-content m-3" />
+      </div>
+      <Accordion isOpen={showMoreOptions} >
+        <div className="flex items-center justify-between mb-4">
+          <p>Transpiler option</p>
+          <Select
+            {...register("transpiler_option")}
+          >
+            <option value="default">default</option>
+            <option value="none">none</option>
+            <option value="custom">custom</option>
+          </Select>
+        </div>
+        <Accordion isOpen={formValues.transpiler_option === "custom"}>
+          <TextArea
+            errorMessage={advancedOptionsErrors.transpilerInfo}
+            value={transpilerInfoInput}
+            onChange={(event) => {
+              const value = event.target.value
+              setTranspilerInfoInput(value);
+              try {
+                const parsedValue = JSON.parse(value);
+                setTranspilerInfo(parsedValue);
+                setAdvancedOptionsErrors({
+                  ...advancedOptionsErrors,
+                  transpilerInfo: ""
+                })
+              }
+              catch (_) {
+                setAdvancedOptionsErrors({
+                  ...advancedOptionsErrors,
+                  transpilerInfo: "Please set a valid JSON value."
+                })
+              }
+            }}
+          />
+        </Accordion>
+
+        <Spacer className="h-6" />
+
+        <div className="flex items-center justify-between">
+          <p>Mitigation option</p>
+          <Select {...register("mitigation_option")}>
+            <option value="ro_pseudo_inverse">readout pseudo inverse</option>
+            <option value="none">none</option>
+          </Select>
+        </div>
+
+        <Spacer className="h-6" />
+
+        <div className="flex items-center justify-between">
+          <p>Simulator option</p>
+          <TextArea
+            errorMessage={advancedOptionsErrors.simulatorInfo}
+            value={simulatorInfoInput}
+            onChange={(event) => {
+              const value = event.target.value
+              setSimulatorInfoInput(value);
+              try {
+                const parsedValue = JSON.parse(value);
+                setSimulatorInfo(parsedValue);
+                setAdvancedOptionsErrors({
+                  ...advancedOptionsErrors,
+                  simulatorInfo: ""
+                })
+              }
+              catch (_) {
+                setAdvancedOptionsErrors({
+                  ...advancedOptionsErrors,
+                  simulatorInfo: "Please set a valid JSON value."
+                })
+              }
+            }}
+          />
+        </div>
+        <Spacer className="h-6" />
+        <hr className="w-full text-neutral-content" />
+
+      </Accordion>
+
+      <Spacer className="h-6" />
+
       <div>
-        <div className="flex">
+        <div className="flex gap-6">
           <Button
             loading={isSubmitting}
             onClick={handleSubmit(handleClickSubmit)}
@@ -300,6 +453,21 @@ export const ControlPanelExecution = (props: ControlPanelExecutionProps) => {
           >
             {t('composer.control_panel.exec.submit')}
           </Button>
+
+          {props.jobId !== null
+            ? <div
+              className="flex items-center gap-4 text-link cursor-pointer"
+              onClick={() => {
+                navigate(`/jobs/${props.jobId}`);
+              }}
+            >
+              <span>
+                {t("composer.control_panel.exec.see_result")}
+              </span>
+              <span>{'('}Job ID: {props.jobId}{')'}</span>
+            </div>
+            : null
+          }
         </div>
       </div>
     </>

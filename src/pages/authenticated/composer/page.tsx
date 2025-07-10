@@ -58,7 +58,11 @@ const renderQasm = (qubitNumber: number, steps: ExtendedGate[]): string => {
   }, "");
 
   const measurementPart = "c = measure q;"
-  return `OPENQASM 3;
+  const moduleHeader = `// Sent from OQTOPUS composer
+// ${JSON.stringify({ qubitNumber, steps: steps.filter(g => g !== undefined && g._tag !== "$dummy") })}
+  `;
+  return `${moduleHeader}
+  OPENQASM 3;
 include "stdgates.inc";
 ${declareQubits}
 ${declareBits}
@@ -110,7 +114,7 @@ export default function Page() {
     operators: []
   });
 
-
+  const [jobId, setJobId] = useState<null | string>(null);
 
   const fetchDevices = async () => {
     setBusy(true);
@@ -149,6 +153,7 @@ export default function Page() {
     try {
       const jobId = await jobApi.submitJob(req);
       toast.success(t('job.form.toast.success'));
+      setJobId(jobId);
     }
     catch (e) {
       toast.error(t('job.form.toast.error'));
@@ -217,6 +222,7 @@ export default function Page() {
       <ControlPanel
         onSubmit={handleSubmitJob}
         devices={devices}
+        jobId={jobId}
         jobType={jobType}
         busy={busy}
         mkProgram={() => ({
