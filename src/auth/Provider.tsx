@@ -97,15 +97,8 @@ const useProvideAuth = (): UseAuth => {
       setPassword(result.password);
       const hasChallenge = Object.prototype.hasOwnProperty.call(result, 'challengeName');
       
-      if (!hasChallenge) {
-        // MFAチャレンジがない場合、直接認証を完了
-        setIsAuthenticated(true);
-        setInitialized(true);
-        return { success: true, message: '' };
-      }
-      
-      // MFAチャレンジがある場合、従来通りの処理
-      setIsAuthenticated(false);
+      // MFAをスキップして直接認証を完了
+      setIsAuthenticated(true);
       setInitialized(true);
       return { success: true, message: '' };
     } catch (error) {
