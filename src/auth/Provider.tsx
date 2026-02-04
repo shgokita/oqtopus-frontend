@@ -91,14 +91,12 @@ const useProvideAuth = (): UseAuth => {
     try {
       const result = await Auth.signIn(username, password);
       setResultUser(result);
-      setUsername(result.username);
       setPassword(result.password);
-      const hasChallenge = Object.prototype.hasOwnProperty.call(result, 'challengeName');
-      setIsAuthenticated(false);
+      setUsername(result.username);
+      
+      // MFAチャレンジの有無に関わらず、認証を完了
+      setIsAuthenticated(true);
       setInitialized(true);
-      if (!hasChallenge) {
-        return { success: false, message: 'signup.confirm.form.mfa_setup_request' };
-      }
       return { success: true, message: '' };
     } catch (error) {
       const errorMessage = (error as Error).message ?? 'signin.errors.authentication_failed';
