@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { SIGN_IN_REQUIRES_MFA } from '@/auth/Provider';
 import { useAuth } from '@/auth/hook';
 import { NavLink } from 'react-router';
 import * as yup from 'yup';
@@ -40,7 +41,11 @@ export default function LoginPage() {
           const { success, message } = await auth.signIn(data.username, data.password);
           
           if (success) {
-            // MFAをスキップして直接ダッシュボードへ遷移
+            if (message === SIGN_IN_REQUIRES_MFA) {
+              navigate('/confirm-mfa');
+              return;
+            }
+
             navigate('/dashboard');
             return;
           }

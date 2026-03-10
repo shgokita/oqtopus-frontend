@@ -6,6 +6,8 @@ import { Amplify, Auth } from 'aws-amplify';
 
 Amplify.configure({ Auth: ENV.AWS_CONFIG });
 
+export const SIGN_IN_REQUIRES_MFA = 'signin.confirm.required';
+
 export interface UseAuth {
   initialized: boolean;
   isAuthenticated: boolean;
@@ -91,13 +93,27 @@ const useProvideAuth = (): UseAuth => {
     try {
       const result = await Auth.signIn(username, password);
       setResultUser(result);
-      setPassword(result.password);
-      setUsername(result.username);
-      
-      // MFAチャレンジの有無に関わらず、認証を完了
-      setIsAuthenticated(true);
+      setPassword(password);
+      setUsername(result.username ?? username);
+
+      if (result.signInUserSession != null) {
+        setIsAuthenticated(true);
+        setInitialized(true);
+        return { success: true, message: '' };
+      }
+
+      if (result.challengeName === 'SOFTWARE_TOKEN_MFA') {
+        setIsAuthenticated(false);
+        setInitialized(true);
+        return { success: true, message: SIGN_IN_REQUIRES_MFA };
+      }
+
+      setIsAuthenticated(false);
       setInitialized(true);
-      return { success: true, message: '' };
+      return {
+        success: false,
+        message: 'signin.auth.message.error.noMFA',
+      };
     } catch (error) {
       const errorMessage = (error as Error).message ?? 'signin.errors.authentication_failed';
       return {

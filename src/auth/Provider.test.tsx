@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor, renderHook, act } from '@testing-library/react';
-import { AuthProvider, AuthContext, UseAuth } from './Provider';
+import { AuthProvider, AuthContext, SIGN_IN_REQUIRES_MFA, UseAuth } from './Provider';
 import { Auth } from 'aws-amplify';
 import ENV from '@/env';
 import { useContext } from 'react';
@@ -179,11 +179,14 @@ describe('Auth Functions', () => {
   });
 
   describe('signIn', () => {
-    it('returns success when sign in is successful with challenge', async () => {
+    it('returns success when sign in establishes a session', async () => {
       const mockResult = {
         username: 'testuser',
-        password: 'testpass',
-        challengeName: 'SOFTWARE_TOKEN_MFA',
+        signInUserSession: {
+          idToken: {
+            jwtToken: 'mock-jwt-token',
+          },
+        },
       };
       mockAuth.signIn.mockResolvedValue(mockResult);
 
@@ -196,12 +199,30 @@ describe('Auth Functions', () => {
       const response = await result.current.signIn('testuser', 'testpass');
       expect(response).toEqual({ success: true, message: '' });
       expect(mockAuth.signIn).toHaveBeenCalledWith('testuser', 'testpass');
+      expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('returns failure when no challenge is present', async () => {
+    it('returns MFA confirmation requirement when sign in returns an MFA challenge', async () => {
       const mockResult = {
         username: 'testuser',
-        password: 'testpass',
+        challengeName: 'SOFTWARE_TOKEN_MFA',
+      };
+      mockAuth.signIn.mockResolvedValue(mockResult);
+
+      const { result } = renderHook(() => useContext(AuthContext), {
+        wrapper: TestWrapper,
+      });
+
+      await waitFor(() => expect(result.current.initialized).toBe(true));
+
+      const response = await result.current.signIn('testuser', 'testpass');
+      expect(response).toEqual({ success: true, message: SIGN_IN_REQUIRES_MFA });
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    it('returns failure when sign in does not establish a session', async () => {
+      const mockResult = {
+        username: 'testuser',
       };
       mockAuth.signIn.mockResolvedValue(mockResult);
 
@@ -214,8 +235,9 @@ describe('Auth Functions', () => {
       const response = await result.current.signIn('testuser', 'testpass');
       expect(response).toEqual({
         success: false,
-        message: 'signup.confirm.form.mfa_setup_request',
+        message: 'signin.auth.message.error.noMFA',
       });
+      expect(result.current.isAuthenticated).toBe(false);
     });
 
     it('returns error message on sign in failure', async () => {
