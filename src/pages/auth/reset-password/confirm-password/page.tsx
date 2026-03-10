@@ -13,7 +13,10 @@ import { Spacer } from '@/pages/_components/Spacer';
 import { useDocumentTitle } from '@/pages/_hooks/title';
 import { toast } from 'react-toastify';
 import { errorToastConfig, infoToastConfig } from '@/config/toast';
-import { createPasswordConfirmSchema, createPasswordSchema } from '@/config/validation/passwordSchemas';
+import {
+  createPasswordConfirmSchema,
+  createPasswordSchema,
+} from '@/config/validation/passwordSchemas';
 
 interface FormInput {
   password: string;
@@ -23,14 +26,17 @@ interface FormInput {
 
 const validationRules = (t: (key: string) => string): yup.ObjectSchema<FormInput> =>
   yup.object({
-    password: createPasswordSchema({
-      required: t('forgot_password.confirm.form.error_message.password_enter'),
-      lowercase: t('forgot_password.confirm.form.error_message.password_lowercase'),
-      uppercase: t('forgot_password.confirm.form.error_message.password_uppercase'),
-      number: t('forgot_password.confirm.form.error_message.password_number'),
-      special: t('forgot_password.confirm.form.error_message.password_special'),
-      min: t('forgot_password.confirm.form.error_message.password_min'),
-    }, 12),
+    password: createPasswordSchema(
+      {
+        required: t('forgot_password.confirm.form.error_message.password_enter'),
+        lowercase: t('forgot_password.confirm.form.error_message.password_lowercase'),
+        uppercase: t('forgot_password.confirm.form.error_message.password_uppercase'),
+        number: t('forgot_password.confirm.form.error_message.password_number'),
+        special: t('forgot_password.confirm.form.error_message.password_special'),
+        min: t('forgot_password.confirm.form.error_message.password_min'),
+      },
+      12
+    ),
     confirm_password: createPasswordConfirmSchema('password', {
       required: t('forgot_password.confirm.form.error_message.confirm_password_enter'),
       mismatch: t('forgot_password.confirm.form.error_message.confirm_password_mismatch'),
@@ -83,6 +89,7 @@ export default function ForgotPasswordConfirmPage() {
           label={t('forgot_password.confirm.form.code')}
           errorMessage={errors.code?.message}
           {...register('code')}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-2.5" />
         <p className={clsx('text-xs', 'leading-[1.8]')}>
@@ -96,6 +103,7 @@ export default function ForgotPasswordConfirmPage() {
           label={t('forgot_password.confirm.form.password')}
           errorMessage={errors.password?.message}
           {...register('password')}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-2.5" />
         <p className={clsx('text-xs', 'leading-[1.8]', 'text-neutral-content')}>
@@ -109,6 +117,7 @@ export default function ForgotPasswordConfirmPage() {
           label={t('forgot_password.confirm.form.confirm_password')}
           errorMessage={errors.confirm_password?.message}
           {...register('confirm_password')}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-5" />
         <Button type="submit" color="secondary" loading={processing}>

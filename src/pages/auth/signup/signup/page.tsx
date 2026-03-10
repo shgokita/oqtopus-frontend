@@ -29,14 +29,17 @@ interface FormInput {
 const validationRules = (t: (key: string) => string): yup.ObjectSchema<FormInput> =>
   yup.object({
     username: createEmailSchema(t),
-    password: createPasswordSchema({
-      required: t('signup.form.error_message.password_enter'),
-      lowercase: t('signup.form.error_message.password_lowercase'),
-      uppercase: t('signup.form.error_message.password_uppercase'),
-      number: t('signup.form.error_message.password_number'),
-      special: t('signup.form.error_message.password_special'),
-      min: t('signup.form.error_message.password_min'),
-    }, 12),
+    password: createPasswordSchema(
+      {
+        required: t('signup.form.error_message.password_enter'),
+        lowercase: t('signup.form.error_message.password_lowercase'),
+        uppercase: t('signup.form.error_message.password_uppercase'),
+        number: t('signup.form.error_message.password_number'),
+        special: t('signup.form.error_message.password_special'),
+        min: t('signup.form.error_message.password_min'),
+      },
+      12
+    ),
     confirm_password: createPasswordConfirmSchema('password', {
       required: t('signup.form.error_message.confirm_password_enter'),
       mismatch: t('signup.form.error_message.confirm_password_mismatch'),
@@ -82,6 +85,7 @@ export default function SignUpPage() {
           {...register('username')}
           label={t('signup.form.mail')}
           errorMessage={errors.username?.message}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-5" />
         <Input
@@ -91,6 +95,7 @@ export default function SignUpPage() {
           {...register('password')}
           label={t('signup.form.password')}
           errorMessage={errors.password?.message}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-2.5" />
         <p
@@ -111,6 +116,7 @@ export default function SignUpPage() {
           {...register('confirm_password')}
           label={t('signup.form.confirm_password')}
           errorMessage={errors.confirm_password?.message}
+          className={clsx('bg-base-card')}
         />
         <Spacer className="h-5" />
         <Button type="submit" color="secondary" loading={processing}>

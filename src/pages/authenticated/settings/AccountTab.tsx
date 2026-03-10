@@ -18,7 +18,10 @@ import { toast } from 'react-toastify';
 import { errorToastConfig, successToastConfig } from '@/config/toast';
 import { useUserAPI } from '@/backend/hook';
 import { useAuth } from '@/auth/hook';
-import { createPasswordConfirmSchema, createPasswordSchema } from '@/config/validation/passwordSchemas';
+import {
+  createPasswordConfirmSchema,
+  createPasswordSchema,
+} from '@/config/validation/passwordSchemas';
 
 interface AccountTabFormData {
   currentPassword: string;
@@ -35,14 +38,17 @@ const defaultFormValues: AccountTabFormData = {
 const validationRules = (t: (key: string) => string): yup.ObjectSchema<AccountTabFormData> =>
   yup.object({
     currentPassword: yup.string().required(),
-    newPassword: createPasswordSchema({
-      required: t('signup.form.error_message.password_enter'),
-      lowercase: t('signup.form.error_message.password_lowercase'),
-      uppercase: t('signup.form.error_message.password_uppercase'),
-      number: t('signup.form.error_message.password_number'),
-      special: t('signup.form.error_message.password_special'),
-      min: t('signup.form.error_message.password_min'),
-    }, 12),
+    newPassword: createPasswordSchema(
+      {
+        required: t('signup.form.error_message.password_enter'),
+        lowercase: t('signup.form.error_message.password_lowercase'),
+        uppercase: t('signup.form.error_message.password_uppercase'),
+        number: t('signup.form.error_message.password_number'),
+        special: t('signup.form.error_message.password_special'),
+        min: t('signup.form.error_message.password_min'),
+      },
+      12
+    ),
     newPasswordConfirm: createPasswordConfirmSchema('newPassword', {
       required: t('signup.form.error_message.confirm_password_enter'),
       mismatch: t('signup.form.error_message.confirm_password_mismatch'),
@@ -106,6 +112,21 @@ export function AccountTab({ allowDeletion = false }: AccountTabProps) {
     }
   };
 
+  const passwordFields = [
+    {
+      name: 'currentPassword' as const,
+      label: t('settings.account.currentPassword'),
+    },
+    {
+      name: 'newPassword' as const,
+      label: t('settings.account.newPassword'),
+    },
+    {
+      name: 'newPasswordConfirm' as const,
+      label: t('settings.account.confirmPassword'),
+    },
+  ] as const;
+
   return (
     <div className={clsx('max-w-2xl', 'space-y-8')}>
       <div>
@@ -114,41 +135,32 @@ export function AccountTab({ allowDeletion = false }: AccountTabProps) {
         </h3>
 
         <form onSubmit={handleSubmit(handlePasswordSubmit)} className={clsx('space-y-4')}>
-          <TextField
-            {...register('currentPassword')}
-            autoComplete="off"
-            fullWidth
-            type="password"
-            label={t('settings.account.currentPassword')}
-            variant="outlined"
-            required
-            error={Boolean(errors.currentPassword)}
-            helperText={errors.currentPassword?.message}
-          />
-
-          <TextField
-            {...register('newPassword')}
-            autoComplete="off"
-            fullWidth
-            type="password"
-            label={t('settings.account.newPassword')}
-            variant="outlined"
-            required
-            error={Boolean(errors.newPassword)}
-            helperText={errors.newPassword?.message}
-          />
-
-          <TextField
-            {...register('newPasswordConfirm')}
-            autoComplete="off"
-            fullWidth
-            type="password"
-            label={t('settings.account.confirmPassword')}
-            variant="outlined"
-            required
-            error={Boolean(errors.newPasswordConfirm)}
-            helperText={errors.newPasswordConfirm?.message}
-          />
+          {passwordFields.map((field) => (
+            <TextField
+              key={field.name}
+              {...register(field.name)}
+              autoComplete="off"
+              fullWidth
+              type="password"
+              label={field.label}
+              variant="outlined"
+              required
+              error={Boolean(errors[field.name])}
+              helperText={errors[field.name]?.message}
+              slotProps={{
+                inputLabel: {
+                  shrink: true,
+                  className: '!text-neutral-content [&.Mui-disabled]:!text-neutral-content',
+                },
+                input: {
+                  className: '!text-base-content',
+                },
+                formHelperText: {
+                  className: '!text-neutral-content [&.Mui-disabled]:!text-neutral-content',
+                },
+              }}
+            />
+          ))}
 
           <Button
             type="submit"
